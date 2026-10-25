@@ -1,6 +1,6 @@
 # RoveCode Plugins
 
-**The adaptive intelligence layer that learns how you work.**
+**A modular skill, routing and memory layer for AI coding tools.**
 
 RoveCode Plugins is a token-efficient, domain-aware skill and memory system for AI coding tools. It routes every request to only the knowledge that matters — no noise, no wasted context — and learns your preferences over time.
 
@@ -15,7 +15,7 @@ Most AI tools inject everything into context hoping something sticks. RoveCode P
 | Problem | RoveCode Solution |
 |---------|------------------|
 | AI doesn't know your stack | Domain plugin system — 11 plugins, 72 skills |
-| Context window fills with irrelevant knowledge | Token-efficient router — avg 2,698 tokens per request |
+| Context window fills with irrelevant knowledge | Selective loading of relevant skills and context |
 | AI forgets your preferences between sessions | Personal Skill file — one evolving profile per user |
 | Routing requires expensive LLM calls | Deterministic classifier — 0-4ms, no API cost |
 | AI gives generic answers | Learning system — explicit likes, dislikes, verified solutions |
@@ -23,6 +23,8 @@ Most AI tools inject everything into context hoping something sticks. RoveCode P
 ---
 
 ## Benchmark Results
+
+> Self-reported measurements from scripts in this repository. See the benchmark files for scope and reproduction details.
 
 Quick-check suite: 20 real-world scenarios across 9 of the 11 domains (`benchmark/run-benchmark.ts`).
 
@@ -39,21 +41,9 @@ Two larger, harder benchmarks back these numbers and go well beyond routing:
 - [`benchmark/large/`](benchmark/large/) — 445 scenarios built directly from every skill's real activation data, plus a signal-collision linter (`bun run lint:signals`) that catches the class of routing bug this suite found before it ships again.
 - [`benchmark/learning/`](benchmark/learning/) — 57 scenarios covering the personal-learning system (signal detection + retrieval domain isolation), an area the original 20-scenario suite above never touched at all.
 
-### Competitor Comparison
+### How to read these results
 
-> **Methodology note:** only the **Routing** and **Token** columns for RoveCode Plugins come from an actual benchmark run (`benchmark/run-benchmark.ts`, reproducible above). Its own **Memory/Skill/Learning** columns, and every column for every other system in this table, are the authors' estimates based on public docs and general reputation — none of these competitors were installed and run through the same test. Treat this table as a positioning illustration, not a measured comparison, until independently verified.
-
-| System | Routing | Memory | Skill | Learning | Token | Overall |
-|--------|---------|--------|-------|----------|-------|---------|
-| **RoveCode Plugins** | **99** | 72 | 78 | **65** | **99** | **83** |
-| mem0 | 85 | **95** | 0 | 0 | 95 | 55 |
-| Cursor Rules | 45 | 0 | 55 | 0 | 30 | 26 |
-| OpenCode Skills | 60 | 0 | 70 | 0 | 75 | 41 |
-| Continue.dev | 40 | 0 | 50 | 10 | 35 | 27 |
-| LangChain Hub | 10 | 0 | 60 | 0 | 20 | 18 |
-| Pieces LTM | 50 | **90** | 0 | 0 | 45 | 37 |
-
-> RoveCode Plugins is, to the authors' knowledge, the only system in this comparison that combines routing + memory + skill injection + learning simultaneously — the "Learning" column itself is also not yet independently benchmarked for RoveCode; see [`benchmark/large/README.md`](benchmark/large/README.md) for what has and hasn't been verified so far.
+The results above come from **repository-owned benchmarks** and should be treated as project evaluation, not as independently verified performance claims. Scenario coverage, baselines and measurement setup are documented in the linked benchmark directories. Comparisons with other tools require the same evaluation environment and test cases.
 
 ---
 
