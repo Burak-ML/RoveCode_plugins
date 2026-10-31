@@ -316,6 +316,4 @@ Output:
 
 ## License
 
-© 2026 Burak-ML / RoveCode. All rights reserved.
-
-This software is provided for use only. Modification, redistribution, sublicensing, or derivative works are not permitted without explicit written permission from the author.
+MIT. See [LICENSE](LICENSE).
