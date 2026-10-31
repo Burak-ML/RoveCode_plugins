@@ -1,171 +1,41 @@
 # RoveCode Plugins
 
-**A modular skill, routing and memory layer for AI coding tools.**
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Runtime](https://img.shields.io/badge/runtime-Bun-black?logo=bun)
+![Protocol](https://img.shields.io/badge/protocol-MCP-informational)
 
-RoveCode Plugins is a token-efficient, domain-aware skill and memory system for AI coding tools. It routes every request to only the knowledge that matters — no noise, no wasted context — and learns your preferences over time.
+**A skill, routing and memory layer for AI coding tools, delivered as an MCP server.**
 
-Built as an [MCP](https://modelcontextprotocol.io) (Model Context Protocol) server — a standard way for AI tools to call out to external tools and data sources over stdio. It works with Claude Code, OpenCode, VS Code extensions (Kilo Code), Hermes Agent, and any other MCP-compatible client.
+AI coding assistants either know nothing about your stack or load every instruction they have into the context window. RoveCode Plugins sits between your request and the model: it picks the few relevant skills, keeps a profile of your preferences, and returns a compact block of context. Routing is deterministic, so it needs no LLM call.
 
----
+## Features
 
-## Why RoveCode Plugins?
+- **Deterministic routing.** A classifier maps each request to a domain, scans skill metadata without loading skill bodies, scores the candidates and enforces a token budget. Only the selected skills are loaded.
+- **11 domain plugins, 72 skills.** Web design, backend, database, Rust, security, DevOps, testing, AI engineering, mobile, automation and game development.
+- **Personal skill file.** One evolving file per user records likes, dislikes, "remember this" statements and verified fixes. Retrieval uses TF-IDF similarity with entity and recency scoring, and it is domain-aware, so a Rust preference never shows up in a web-design request.
+- **Automatic learning.** After each turn the `analyze_and_learn` tool detects preference signals and updates the personal skill (add, merge, strengthen, weaken, replace or ignore).
+- **Skill composition.** Skills declare related skills, so picking `creative-direction` also suggests `typography`, `layout-composition` and `color-system`.
+- **Works with any MCP client.** Claude Code, OpenCode, VS Code (Kilo Code), Hermes Agent and anything that speaks stdio MCP.
 
-Most AI tools inject everything into context hoping something sticks. RoveCode Plugins thinks first.
+## Quick start
 
-| Problem | RoveCode Solution |
-|---------|------------------|
-| AI doesn't know your stack | Domain plugin system — 11 plugins, 72 skills |
-| Context window fills with irrelevant knowledge | Selective loading of relevant skills and context |
-| AI forgets your preferences between sessions | Personal Skill file — one evolving profile per user |
-| Routing requires expensive LLM calls | Deterministic classifier — 0-4ms, no API cost |
-| AI gives generic answers | Learning system — explicit likes, dislikes, verified solutions |
-
----
-
-## Benchmark Results
-
-> Self-reported measurements from scripts in this repository. See the benchmark files for scope and reproduction details.
-
-Quick-check suite: 20 real-world scenarios across 9 of the 11 domains (`benchmark/run-benchmark.ts`).
-
-```
-Overall Score:    98/100  (A+)
-Routing Accuracy: 99/100  — 100% plugin match, 100% skill hit rate
-Token Efficiency: 99/100  — avg 2,621 tokens (vs mem0's 6,900 baseline)
-Routing Speed:    100/100 — avg 1ms, deterministic
-Plugin Isolation: 96/100  — Rust requests never load web-design knowledge
-```
-
-Two larger, harder benchmarks back these numbers and go well beyond routing:
-
-- [`benchmark/large/`](benchmark/large/) — 445 scenarios built directly from every skill's real activation data, plus a signal-collision linter (`bun run lint:signals`) that catches the class of routing bug this suite found before it ships again.
-- [`benchmark/learning/`](benchmark/learning/) — 57 scenarios covering the personal-learning system (signal detection + retrieval domain isolation), an area the original 20-scenario suite above never touched at all.
-
-### How to read these results
-
-The results above come from **repository-owned benchmarks** and should be treated as project evaluation, not as independently verified performance claims. Scenario coverage, baselines and measurement setup are documented in the linked benchmark directories. Comparisons with other tools require the same evaluation environment and test cases.
-
----
-
-## Plugin Library
-
-11 domain plugins, 72 specialized skills.
-
-| Plugin | Skills | Best For |
-|--------|--------|----------|
-| **web-design** | creative-direction, typography, layout-composition, responsive-design, interaction-design, motion-engineering, accessibility, web-performance, browser-qa, visual-review, spacing-rhythm, color-system | UI, landing pages, dashboards, design systems |
-| **backend** | api-design, authentication, middleware-design, error-handling-http, rate-limiting, express-patterns | REST/GraphQL APIs, Node.js servers, auth |
-| **database** | schema-design, query-optimization, migrations, indexing-strategy, transactions, orm-patterns | PostgreSQL, Drizzle, Prisma, slow queries |
-| **rust** | rust-core, ownership-borrowing, async-concurrency, performance, error-handling, cli-engineering | Rust code, lifetimes, Tokio, CLI tools |
-| **security** | auth-security, input-validation, dependency-audit, xss-csrf-protection, injection-prevention, secrets-hygiene | OWASP, XSS/CSRF, JWT security, audits |
-| **devops** | docker-patterns, ci-cd, environment-config, logging-monitoring, deployment-strategies, secrets-management | Docker, GitHub Actions, deployment |
-| **testing** | unit-testing, integration-testing, e2e-testing, tdd-patterns, mocking-patterns, performance-testing | Vitest, Playwright, TDD, coverage |
-| **ai-engineering** | prompt-engineering, rag-patterns, fine-tuning, agent-design, embedding-strategies, llm-evaluation | LLMs, RAG, embeddings, agents |
-| **mobile** | react-native-patterns, mobile-performance, navigation-patterns, offline-storage, push-notifications, app-store | React Native, Expo, iOS/Android |
-| **automation** | workflow-design, browser-automation, scheduling, data-transformation, scraping-strategy, reliability-retries | Scraping, ETL, cron, Playwright |
-| **game-development** | game-loop, physics-patterns, rendering-pipeline, input-handling, game-state, asset-management | Unity, Godot, 2D/3D games |
-
----
-
-## Key Features
-
-### Token-Efficient Routing
-Every request goes through a 3-step pipeline with no LLM calls:
-
-```
-User request
-    ↓
-Deterministic classifier (0-4ms)
-    ↓
-Plugin match → Skill metadata scan (no body loading)
-    ↓
-Score-based selection → Token budget enforcement
-    ↓
-Only selected skill bodies loaded
-    ↓
-Personal knowledge retrieved (TF-IDF + entity boost + temporal scoring)
-    ↓
-Compact context assembled
-```
-
-### Personal Skill System
-Each user gets one evolving `skill.md` file. It learns from:
-
-- **Explicit likes** — "I like this approach, keep it"
-- **Explicit dislikes** — "Don't use rounded cards"
-- **Remember signals** — "Remember that I prefer compact layouts"
-- **Verified solutions** — When a fix passes tests, it's recorded
-
-Personal knowledge uses TF-IDF cosine similarity + named entity boosting + temporal scoring for retrieval. Domain-aware: Rust preferences never appear in web-design requests.
-
-### Automatic Learning
-After each response, the `analyze_and_learn` tool detects signals automatically:
-
-```
-User: "Perfect, keep sidebars like this"
-→ record: design-preference, explicit-like, domain: web-design
-→ personal skill updated
-
-Next request about dashboards:
-→ "prefers narrow sidebar" retrieved automatically
-```
-
-### Skill Composition
-Skills declare relationships. Selecting `creative-direction` auto-suggests `typography`, `layout-composition`, and `color-system`. No manual configuration needed.
-
----
-
-## Installation
-
-### Requirements
-- [Bun](https://bun.sh) v1.0+ — that's it. Bun is its own runtime; you don't need Node.js installed separately. Works on Windows, macOS, and Linux.
-
-### 1. Clone and install
+Requires [Bun](https://bun.sh) 1.0 or later. No separate Node.js install is needed. Works on Windows, macOS and Linux.
 
 ```bash
 git clone https://github.com/Burak-ML/RoveCode_plugins
 cd RoveCode_plugins
 bun install
+bun test        # 149 tests should pass
 ```
 
-### 2. Verify the install
-
-```bash
-bun test
-```
-
-You should see `149 pass, 0 fail`. This confirms the plugin registry, router, classifier, and personal-skill storage all work correctly on your machine before you wire it into any client.
-
-Optionally, sanity-check the routing logic itself against 20 hand-picked scenarios:
-
-```bash
-bun run benchmark/run-benchmark.ts
-```
-
-Expect an overall grade of A+ (98/100). For a much larger, harder check (445 scenarios, one per plugin skill plus edge cases), see [`benchmark/large/`](benchmark/large/).
-
-### 3. Note your install path
-
-Every client below needs the **absolute path** to `src/mcp/index.ts` in your clone. Forward slashes work fine even on Windows (e.g. `C:/Users/you/RoveCode_plugins/src/mcp/index.ts`), so you don't need to escape backslashes in JSON.
-
----
+Every client below needs the **absolute path** to `src/mcp/index.ts` in your clone. Forward slashes work on Windows too (`C:/Users/you/RoveCode_plugins/src/mcp/index.ts`).
 
 ### Claude Code
 
-From the project directory you want it available in:
-
 ```bash
 claude mcp add rovecode-plugins -- bun run /path/to/RoveCode_plugins/src/mcp/index.ts
+claude mcp list    # should show: rovecode-plugins ... Connected
 ```
-
-Or add it directly to `.mcp.json` in your project root (same format as the VS Code config below). Verify with:
-
-```bash
-claude mcp list
-# rovecode-plugins: bun run /path/to/RoveCode_plugins/src/mcp/index.ts - ✓ Connected
-```
-
----
 
 ### OpenCode
 
@@ -177,32 +47,17 @@ Add to `~/.config/opencode/opencode.jsonc`:
     "rovecode-plugins": {
       "type": "local",
       "enabled": true,
-      "command": [
-        "bun",
-        "run",
-        "/path/to/RoveCode_plugins/src/mcp/index.ts"
-      ]
+      "command": ["bun", "run", "/path/to/RoveCode_plugins/src/mcp/index.ts"]
     }
   }
 }
 ```
 
-Replace `/path/to/RoveCode_plugins` with your actual clone path.
+The `AGENTS.md` in this repository tells the model to call `route_request` and `get_context` before it answers.
 
-Verify connection:
+### VS Code (Kilo Code) and other clients
 
-```bash
-opencode mcp list
-# rovecode-plugins  ✓ connected
-```
-
-The system prompt in `AGENTS.md` automatically instructs the model to call `route_request` and `get_context` before every response.
-
----
-
-### VS Code (Kilo Code)
-
-Open Kilo Code settings (`Ctrl+Shift+P` → "Kilo Code: Open MCP Settings") and add:
+Most clients accept the same stdio definition:
 
 ```json
 {
@@ -215,104 +70,85 @@ Open Kilo Code settings (`Ctrl+Shift+P` → "Kilo Code: Open MCP Settings") and 
 }
 ```
 
----
+For Hermes Agent use the `mcp_servers` key with `"transport": "stdio"`.
 
-### Hermes Agent
+## MCP tools
 
-Add to your Hermes agent configuration:
+| Tool | Purpose |
+|------|---------|
+| `route_request` | Route a request and return the selected plugins, skills and personal entries |
+| `get_context` | Assemble the full context, ready to inject into a system prompt |
+| `record_learning` | Record an explicit preference or a verified solution |
+| `analyze_and_learn` | Analyze a conversation turn and apply detected learning signals |
 
-```json
-{
-  "mcp_servers": {
-    "rovecode-plugins": {
-      "transport": "stdio",
-      "command": "bun",
-      "args": ["run", "/path/to/RoveCode_plugins/src/mcp/index.ts"]
-    }
-  }
-}
-```
-
----
-
-### Any MCP-Compatible Tool
-
-The server exposes 4 tools over stdio MCP:
-
-| Tool | Description |
-|------|-------------|
-| `route_request` | Route a request → returns selected plugins, skills, personal entries |
-| `get_context` | Assemble full context → returns ready-to-inject system prompt section |
-| `record_learning` | Record explicit preference or verified solution |
-| `analyze_and_learn` | Analyze a conversation turn → auto-detect and apply learning signals |
-
-Test the server directly:
+Check the server directly:
 
 ```bash
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | bun run src/mcp/index.ts
 ```
 
----
-
-### Troubleshooting
-
-- **Client shows "not connected" / can't spawn the server** — run the exact `bun run /path/to/.../src/mcp/index.ts` command from your config directly in a terminal first. A typo'd path or a `bun` not on `PATH` for the client's environment is the most common cause; the direct run will show the real error instead of a generic "disconnected" status.
-- **`bun run src/cli/index.ts route "..." --debug` prints the result but never returns to your shell prompt** — this is expected. The CLI keeps a file watcher open (so plugin edits hot-reload without a restart), which keeps the process alive on purpose. Press `Ctrl+C` once you've seen the output.
-- **A user's learned preferences seem to vanish** — personal-skill data lives under `data/users/` in your clone (git-ignored on purpose, since it's per-machine state, not project source). Deleting or moving the clone deletes that history with it.
-
----
-
-## How It Works
-
-### Request Flow
+## How routing works
 
 ```
 "Build a responsive SaaS dashboard"
-         ↓
-[classifier] web-design (100% confidence, 1ms)
-         ↓
-[plugins] web-design selected / rust, backend, game-dev rejected
-         ↓
-[skills] layout-composition, responsive-design, spacing-rhythm selected
-         [skills] typography, visual-review, motion-engineering — score below threshold, rejected
-         ↓
-[personal] "prefers narrow sidebar" retrieved (TF-IDF cosine: 0.87)
-         ↓
-[budget] 2,650 tokens / 6,000 budget (44%)
-         ↓
-[context] assembled → injected into model
+        |
+  classifier           -> domain: web-design
+        |
+  plugin selection     -> web-design selected; rust, backend, game-development rejected
+        |
+  skill scoring        -> layout-composition, responsive-design, spacing-rhythm selected
+        |                  typography, visual-review ... below the score threshold
+  personal retrieval   -> "prefers narrow sidebar"
+        |
+  token budget         -> 2,650 of 6,000 tokens
+        |
+  compact context returned to the model
 ```
 
-### Personal Skill Updates
-
-The updater uses 6 operations: ADD, MERGE, STRENGTHEN, WEAKEN, REPLACE, IGNORE.
-
-Similar entries are detected via TF-IDF cosine similarity and merged instead of duplicated. Contradictions are detected automatically ("light mode" preference weakens existing "dark mode" entry). Entries decay over time (6+ months → ×0.95 strength per cycle). Solved-problems never decay.
-
----
-
-## Debug Mode
-
-Inspect routing decisions:
+To see the decisions for any request:
 
 ```bash
 bun run src/cli/index.ts route "Build a SaaS dashboard" default --debug
 ```
 
-Output:
+The CLI keeps a file watcher open so plugin edits hot-reload, so it does not return to the prompt by itself. Press `Ctrl+C` after the output.
 
-```
-[classifier] domains: web-design
-[classifier] keywords: saas dashboard, responsive design
-[plugins] ✓ selected: web-design
-[plugins] ✗ rejected: rust (no domain/hint match)
-[skills] ✓ selected: web-design/layout-composition (~750 tokens)
-[skills] ✓ selected: web-design/responsive-design (~700 tokens)
-[skills] ✗ rejected: web-design/typography — score 0.18 below threshold 0.3
-[budget] estimated total: 2,650 / 6,000
+## Plugin library
+
+| Plugin | Skills |
+|--------|--------|
+| `web-design` | creative direction, typography, layout, responsive design, interaction, motion, accessibility, web performance, browser QA, visual review, spacing, color |
+| `backend` | API design, authentication, middleware, HTTP error handling, rate limiting, Express patterns |
+| `database` | schema design, query optimization, migrations, indexing, transactions, ORM patterns |
+| `rust` | core, ownership and borrowing, async concurrency, performance, error handling, CLI engineering |
+| `security` | auth security, input validation, dependency audit, XSS/CSRF, injection prevention, secrets hygiene |
+| `devops` | Docker, CI/CD, environment config, logging and monitoring, deployment strategies, secrets management |
+| `testing` | unit, integration and end-to-end testing, TDD, mocking, performance testing |
+| `ai-engineering` | prompt engineering, RAG, fine-tuning, agent design, embeddings, LLM evaluation |
+| `mobile` | React Native, mobile performance, navigation, offline storage, push notifications, app store deployment |
+| `automation` | workflow design, browser automation, scheduling, data transformation, scraping, retries |
+| `game-development` | game loop, physics, rendering pipeline, input handling, game state, asset management |
+
+## Benchmarks
+
+The benchmarks in this repository are written and run by the project, so treat them as internal evaluation, not independent measurements.
+
+| Suite | Scope |
+|-------|-------|
+| `benchmark/run-benchmark.ts` | 20 hand-picked scenarios across 9 domains (routing accuracy, token use, speed, plugin isolation) |
+| [`benchmark/large/`](benchmark/large/) | 445 scenarios derived from every skill's activation data, plus `bun run lint:signals` to catch signal collisions between skills |
+| [`benchmark/learning/`](benchmark/learning/) | 57 scenarios for signal detection and domain isolation in the personal-learning system |
+
+```bash
+bun run benchmark/run-benchmark.ts
+bun run benchmark:large
+bun run benchmark:learning
 ```
 
----
+## Troubleshooting
+
+- **Client cannot start the server.** Run the exact `bun run /path/.../src/mcp/index.ts` command from your config in a terminal. A wrong path or a `bun` that is not on the client's `PATH` is the usual cause, and the terminal shows the real error.
+- **Learned preferences disappeared.** Personal data lives in `data/users/` inside your clone and is git-ignored on purpose. Deleting or moving the clone deletes that history.
 
 ## License
 
