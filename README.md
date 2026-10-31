@@ -123,7 +123,7 @@ Skills declare relationships. Selecting `creative-direction` auto-suggests `typo
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/Kayra-ML/RoveCode_plugins
+git clone https://github.com/Burak-ML/RoveCode_plugins
 cd RoveCode_plugins
 bun install
 ```
@@ -316,6 +316,6 @@ Output:
 
 ## License
 
-© 2026 Kayra-ML / RoveCode. All rights reserved.
+© 2026 Burak-ML / RoveCode. All rights reserved.
 
 This software is provided for use only. Modification, redistribution, sublicensing, or derivative works are not permitted without explicit written permission from the author.
