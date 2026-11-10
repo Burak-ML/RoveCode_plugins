@@ -6,8 +6,6 @@ RoveCode Plugins classifies an incoming development request, scores domain-speci
 
 **Explore:** [Quick start](#quick-start) · [Routing](#how-routing-works) · [MCP tools](#mcp-tools) · [Benchmarks](#benchmarks)
 
-**A skill, routing and memory layer for AI coding tools, delivered as an MCP server.**
-
 AI coding assistants either know nothing about your stack or load every instruction they have into the context window. RoveCode Plugins sits between your request and the model: it picks the few relevant skills, keeps a profile of your preferences, and returns a compact block of context. Routing is deterministic, so it needs no LLM call.
 
 ## Features
