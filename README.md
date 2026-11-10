@@ -1,8 +1,10 @@
 # RoveCode Plugins
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Runtime](https://img.shields.io/badge/runtime-Bun-black?logo=bun)
-![Protocol](https://img.shields.io/badge/protocol-MCP-informational)
+**A context-selection layer for AI coding assistants — relevant skills, local preferences, and deterministic routing.**
+
+RoveCode Plugins classifies an incoming development request, scores domain-specific skills, and returns a focused context payload over MCP. Rather than sending every instruction to an LLM, it selects only what is relevant within a token budget.
+
+**Explore:** [Quick start](#quick-start) · [Routing](#how-routing-works) · [MCP tools](#mcp-tools) · [Benchmarks](#benchmarks)
 
 **A skill, routing and memory layer for AI coding tools, delivered as an MCP server.**
 
